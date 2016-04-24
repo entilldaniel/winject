@@ -1,6 +1,7 @@
 package com.whalenut.winject;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
@@ -9,16 +10,33 @@ import java.util.*;
 public class Winject {
 
     Map<String, Object> graph;
+    Map<String, MappingInstance> mappings;
 
     private Winject() {
         graph = new HashMap<>();
+        mappings = new HashMap<>();
     }
 
     public static Winject init() {
         return new Winject();
     }
 
-    public <T> T create(final Class<T> clazz) {
+    public <T> MappingInstance map(Class<T> from) {
+        MappingInstance mappingInstance = new MappingInstance(from);
+        mappings.put(from.getCanonicalName(), mappingInstance);
+        return mappingInstance;
+    }
+
+    public <T> T create(Class<T> clazz) {
+        if(mappings.containsKey(clazz.getCanonicalName())) {
+            clazz = mappings.get(clazz.getCanonicalName()).get();
+        }
+
+        boolean isSingleton = false;
+        if(clazz.isAnnotationPresent(Singleton.class) && graph.containsKey(clazz.getCanonicalName())) {
+            return (T) graph.get(clazz.getCanonicalName());
+        }
+
         Optional<? extends Constructor<?>> constructor = Arrays.asList(clazz.getConstructors()).stream().filter(ctor -> {
             Optional<Inject> injectableConstructor = Optional.ofNullable(ctor.getAnnotation(Inject.class));
             return injectableConstructor.isPresent();
