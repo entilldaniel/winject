@@ -6,19 +6,23 @@ import javax.inject.Inject;
 
 public class Bclass {
 
+    @Inject
+    private Torpedo torpedo;
+
     private final Cclass c;
-    private final Torpedo torpedo;
 
     @Inject
-    public Bclass(Cclass c, Torpedo torpedo) {
+    public Bclass(Cclass c) {
         System.out.println("B constructor");
         this.c = c;
-        this.torpedo = torpedo;
-        torpedo.inspect();
     }
 
     public void printName() {
         System.out.println("Bclass instance: " + this.toString());
-        System.out.println("B CLASS::" + torpedo.getClass().getCanonicalName());
+        if(torpedo != null) {
+            torpedo.inspect();
+        } else {
+            System.out.println("Torpedo is still null! :(");
+        }
     }
 }

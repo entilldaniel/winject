@@ -23,45 +23,55 @@ public class Winject {
 
     public <T> MappingInstance map(Class<T> from) {
         MappingInstance mappingInstance = new MappingInstance(from);
-        mappings.put(from.getCanonicalName(), mappingInstance);
+        mappings.put(from.getName(), mappingInstance);
         return mappingInstance;
     }
 
     public <T> T create(Class<T> clazz) {
-        if(mappings.containsKey(clazz.getCanonicalName())) {
-            clazz = mappings.get(clazz.getCanonicalName()).get();
+        if(mappings.containsKey(clazz.getName())) {
+            clazz = mappings.get(clazz.getName()).get();
         }
 
-        boolean isSingleton = false;
-        if(clazz.isAnnotationPresent(Singleton.class) && graph.containsKey(clazz.getCanonicalName())) {
-            return (T) graph.get(clazz.getCanonicalName());
+        if(clazz.isAnnotationPresent(Singleton.class) && graph.containsKey(clazz.getName())) {
+            return (T) graph.get(clazz.getName());
         }
 
-        Optional<? extends Constructor<?>> constructor = Arrays.asList(clazz.getConstructors()).stream().filter(ctor -> {
+        T instance;
+        Optional<? extends Constructor<?>> constructor = getInjectableConstructor(clazz);
+        if(!constructor.isPresent()) {
+             instance = checkNoArgs(clazz);
+        } else {
+            instance = buildTree(constructor);
+        }
+
+        return instance;
+    }
+
+    private <T> Optional<? extends Constructor<?>> getInjectableConstructor(final Class<T> clazz) {
+        return Arrays.asList(clazz.getConstructors()).stream().filter(ctor -> {
             Optional<Inject> injectableConstructor = Optional.ofNullable(ctor.getAnnotation(Inject.class));
             return injectableConstructor.isPresent();
         }).findFirst();
+    }
 
-        if(!constructor.isPresent()) {
-            return checkNoArgs(clazz);
-        } else {
-            Constructor<?> injectableConstructor = constructor.get();
-            List<Parameter> parameters = Arrays.asList(injectableConstructor.getParameters());
-            List<Object> params = new ArrayList<>(parameters.size());
-            for(Parameter param : parameters) {
-                params.add(create(param.getType()));
-            }
-            Object[] objects = params.toArray();
-            try {
-                T instance = (T) injectableConstructor.newInstance(objects);
-                graph.put(instance.getClass().getCanonicalName(), instance);
-                return instance;
-            } catch (InstantiationException | IllegalAccessException |InvocationTargetException e) {
-                e.printStackTrace();
-            }
+    private <T> T buildTree(final Optional<? extends Constructor<?>> constructor) {
+        Constructor<?> injectableConstructor = constructor.get();
+        List<Parameter> parameters = Arrays.asList(injectableConstructor.getParameters());
+        List<Object> params = new ArrayList<>(parameters.size());
+        for(Parameter param : parameters) {
+            params.add(create(param.getType()));
         }
 
-        throw new IllegalArgumentException("Could not create instace!");
+        Object[] objects = params.toArray();
+        try {
+            T instance = (T) injectableConstructor.newInstance(objects);
+            populateFields(instance);
+            graph.put(instance.getClass().getName(), instance);
+            return instance;
+        } catch (InstantiationException | IllegalAccessException |InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        throw new IllegalArgumentException("Could not create instance!");
     }
 
     private <T> T checkNoArgs(final Class<T> clazz) {
@@ -72,14 +82,29 @@ public class Winject {
 
         if(noArgsConstructor.isPresent()) {
             try {
-                T t = clazz.newInstance();
-                System.out.println(t.getClass().getCanonicalName());
-                graph.put(t.getClass().getCanonicalName(), t);
-                return t;
-            } catch (IllegalAccessException | InstantiationException e) {
-                //Let it continue to Illegalargumentexception.
+                T instance = clazz.newInstance();
+                populateFields(instance);
+                graph.put(instance.getClass().getName(), instance);
+                return instance;
+            } catch (RuntimeException | IllegalAccessException | InstantiationException e) {
+                throw new RuntimeException(e);
             }
         }
-        throw new IllegalArgumentException("No injectable or no arguments constructor found for class " + clazz.getCanonicalName());
+        throw new IllegalArgumentException("No injectable or no arguments constructor found for class " + clazz.getName());
+    }
+
+    private <T> void populateFields(T t) {
+        Arrays.stream(t.getClass().getDeclaredFields())
+                .filter(field -> field.isAnnotationPresent(Inject.class))
+                .forEach(field -> {
+                    try {
+                        field.setAccessible(true);
+                        field.set(t, create(field.getType()));
+                        field.setAccessible(false);
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                        throw new RuntimeException("Cannot access field: " + field.getName() + " in class: " + t.getClass().getCanonicalName());
+                    }
+                });
     }
 }
