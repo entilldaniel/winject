@@ -1,11 +1,16 @@
 package com.whalenut.winject;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Parameter;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Winject {
 
@@ -28,6 +33,10 @@ public class Winject {
     }
 
     public <T> T create(Class<T> clazz) {
+        if(clazz.getClass().equals(Provider.class)) {
+            createProvider(clazz);
+        }
+
         if(mappings.containsKey(clazz.getName())) {
             clazz = mappings.get(clazz.getName()).get();
         }
@@ -47,6 +56,10 @@ public class Winject {
         return instance;
     }
 
+    private <T> Provider<T> createProvider(final Class<T> clazz) {
+        return null;
+    }
+
     private <T> Optional<? extends Constructor<?>> getInjectableConstructor(final Class<T> clazz) {
         return Arrays.asList(clazz.getConstructors()).stream().filter(ctor -> {
             Optional<Inject> injectableConstructor = Optional.ofNullable(ctor.getAnnotation(Inject.class));
@@ -56,13 +69,10 @@ public class Winject {
 
     private <T> T buildTree(final Optional<? extends Constructor<?>> constructor) {
         Constructor<?> injectableConstructor = constructor.get();
-        List<Parameter> parameters = Arrays.asList(injectableConstructor.getParameters());
-        List<Object> params = new ArrayList<>(parameters.size());
-        for(Parameter param : parameters) {
-            params.add(create(param.getType()));
-        }
+        Object[] objects = Stream.of(injectableConstructor.getParameters())
+                .map(p -> create(p.getType()))
+                .collect(Collectors.toList()).toArray();
 
-        Object[] objects = params.toArray();
         try {
             T instance = (T) injectableConstructor.newInstance(objects);
             populateFields(instance);
