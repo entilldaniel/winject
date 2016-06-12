@@ -5,6 +5,8 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,9 +35,6 @@ public class Winject {
     }
 
     public <T> T create(Class<T> clazz) {
-        if(clazz.getClass().equals(Provider.class)) {
-            createProvider(clazz);
-        }
 
         if(mappings.containsKey(clazz.getName())) {
             clazz = mappings.get(clazz.getName()).get();
@@ -56,8 +55,14 @@ public class Winject {
         return instance;
     }
 
-    private <T> Provider<T> createProvider(final Class<T> clazz) {
-        return null;
+    private Provider<?> createProvider(Type type) {
+        return () -> {
+            try {
+                return create(Class.forName(type.getTypeName()));
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException("Could not create provider", e);
+            }
+        };
     }
 
     private <T> Optional<? extends Constructor<?>> getInjectableConstructor(final Class<T> clazz) {
@@ -70,7 +75,12 @@ public class Winject {
     private <T> T buildTree(final Optional<? extends Constructor<?>> constructor) {
         Constructor<?> injectableConstructor = constructor.get();
         Object[] objects = Stream.of(injectableConstructor.getParameters())
-                .map(p -> create(p.getType()))
+                .map(p -> {
+                    if(p.getType().equals(Provider.class)) {
+                        return createProvider(((ParameterizedType)p.getParameterizedType()).getActualTypeArguments()[0]);
+                    }
+                    return create(p.getType());
+                })
                 .collect(Collectors.toList()).toArray();
 
         try {
@@ -107,7 +117,7 @@ public class Winject {
         Arrays.stream(t.getClass().getDeclaredFields())
                 .filter(field -> field.isAnnotationPresent(Inject.class))
                 .forEach(field -> {
-                    try {
+                    try { //TODO: Fix bad settings of fields.
                         field.setAccessible(true);
                         field.set(t, create(field.getType()));
                         field.setAccessible(false);

@@ -8,7 +8,7 @@ public class MappingInstance<T, T2> {
     private Class<T2> toClass;
 
     public MappingInstance(Class<T> fromClass) {
-        if(isConcrete(fromClass)) {
+        if (isConcrete(fromClass)) {
             throw new IllegalArgumentException("Class must be interface or abstract!");
         }
         this.fromClass = fromClass;

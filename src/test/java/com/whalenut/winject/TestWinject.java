@@ -8,6 +8,8 @@ public class TestWinject {
     public TestWinject() {
         Winject winject = Winject.init();
         winject.map(Torpedo.class).to(FotonTorpedo.class);
+
+
         Aclass a = winject.create(Aclass.class);
         a.tell();
     }
