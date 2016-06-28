@@ -16,16 +16,25 @@ import java.util.stream.Stream;
 
 public class Winject {
 
-    Map<String, Object> graph;
-    Map<String, MappingInstance> mappings;
+    private final Map<String, Object> graph;
+    private final Map<String, MappingInstance> mappings;
 
-    private Winject() {
+    private final ClassLoader loader;
+
+    private Winject(ClassLoader loader) {
         graph = new HashMap<>();
         mappings = new HashMap<>();
+        this.loader = loader;
+
     }
 
     public static Winject init() {
-        return new Winject();
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        return new Winject(contextClassLoader);
+    }
+
+    public static Winject init(ClassLoader loader) {
+        return new Winject(loader);
     }
 
     public <T> MappingInstance map(Class<T> from) {
