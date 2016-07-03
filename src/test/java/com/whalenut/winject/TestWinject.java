@@ -1,12 +1,13 @@
 package com.whalenut.winject;
 
+import com.whalenut.winject.inject.Injector;
 import com.whalenut.winject.torpedo.FotonTorpedo;
 import com.whalenut.winject.torpedo.Torpedo;
 
 public class TestWinject {
 
     public TestWinject() {
-        Winject winject = Winject.init();
+        Injector winject = Winject.init();
         winject.map(Torpedo.class).to(FotonTorpedo.class);
 
 

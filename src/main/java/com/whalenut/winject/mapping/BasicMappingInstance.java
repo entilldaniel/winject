@@ -1,15 +1,15 @@
-package com.whalenut.winject;
+package com.whalenut.winject.mapping;
 
 import java.lang.reflect.Modifier;
 
-public class MappingInstance<T, T2> {
+public class BasicMappingInstance<T, T2> implements MappingInstance<T, T2> {
 
     private final Class<T> fromClass;
     private Class<T2> toClass;
 
-    public MappingInstance(Class<T> fromClass) {
+    public BasicMappingInstance(Class<T> fromClass) {
         if (isConcrete(fromClass)) {
-            throw new IllegalArgumentException("Class must be interface or abstract!");
+            throw new IllegalArgumentException("Class must be either a interface or abstract!");
         }
         this.fromClass = fromClass;
     }
@@ -18,11 +18,13 @@ public class MappingInstance<T, T2> {
         return !(Modifier.isInterface(fromClass.getModifiers()) || Modifier.isAbstract(fromClass.getModifiers()));
     }
 
-    public MappingInstance to(Class<T2> toClass) {
+    @Override
+    public BasicMappingInstance to(Class<T2> toClass) {
         this.toClass = toClass;
         return this;
     }
 
+    @Override
     public Class<T2> get() {
         return toClass;
     }
