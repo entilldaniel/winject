@@ -1,4 +1,4 @@
-package com.whalenut.winject;
+package com.whalenut.winject.real;
 
 public class Cclass {
 

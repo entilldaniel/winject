@@ -1,4 +1,4 @@
-package com.whalenut.winject;
+package com.whalenut.winject.real;
 
 import javax.inject.Inject;
 import javax.inject.Provider;

@@ -1,5 +1,6 @@
-package com.whalenut.winject;
+package com.whalenut.winject.real;
 
+import com.whalenut.winject.Winject;
 import com.whalenut.winject.inject.Injector;
 import org.atinject.tck.Tck;
 import org.atinject.tck.auto.Car;

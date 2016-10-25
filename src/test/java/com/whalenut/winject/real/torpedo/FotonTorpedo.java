@@ -1,4 +1,4 @@
-package com.whalenut.winject.torpedo;
+package com.whalenut.winject.real.torpedo;
 
 
 import javax.inject.Singleton;

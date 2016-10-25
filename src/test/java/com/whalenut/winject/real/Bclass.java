@@ -1,6 +1,6 @@
-package com.whalenut.winject;
+package com.whalenut.winject.real;
 
-import com.whalenut.winject.torpedo.Torpedo;
+import com.whalenut.winject.real.torpedo.Torpedo;
 
 import javax.inject.Inject;
 
