@@ -45,6 +45,14 @@ public class DefaultInjectorTest {
         assertNotNull(test);
     }
 
+    @Test
+    public void testInterfaceToConcreteMapping() {
+        injector.map(Buzz.class).to(Fizz.class);
+        Buzz test = injector.create(Buzz.class);
+
+        assertNotNull(test);
+    }
+
     private static class Foo {
         private final Bar x;
 
@@ -96,5 +104,11 @@ public class DefaultInjectorTest {
         }
     }
 
+    private static class Fizz implements Buzz {
+        public Fizz() {
+        }
+    }
+
+    private interface Buzz {}
 
 }

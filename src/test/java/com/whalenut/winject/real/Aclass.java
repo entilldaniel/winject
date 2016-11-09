@@ -24,7 +24,9 @@ public class Aclass {
 
         System.out.println("Creating a bunch of tellers");
         Stream.generate(() -> new Integer(1)).limit(10).forEach(a -> {
-            tellerProvider.get().call();
+            Teller teller = tellerProvider.get();
+            teller.call();
+            System.out.println(teller);
         });
 
 

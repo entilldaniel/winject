@@ -12,6 +12,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,7 +24,6 @@ public final class DefaultInjector implements Injector {
     private final Map<String, BasicMappingInstance> mappings;
 
     private final ClassLoader loader;
-
 
     public DefaultInjector(final ClassLoader loader) {
         graph = new HashMap<>();
@@ -71,7 +71,7 @@ public final class DefaultInjector implements Injector {
     }
 
     private <T> Optional<? extends Constructor<?>> getInjectableConstructor(final Class<T> clazz) {
-        return Arrays.asList(clazz.getConstructors()).stream().filter(ctor -> {
+        return Stream.of(clazz.getConstructors()).filter(ctor -> {
             Optional<Inject> injectableConstructor = Optional.ofNullable(ctor.getAnnotation(Inject.class));
             return injectableConstructor.isPresent();
         }).findFirst();
@@ -79,17 +79,17 @@ public final class DefaultInjector implements Injector {
 
     private <T> T buildTree(final Optional<? extends Constructor<?>> constructor) {
         Constructor<?> injectableConstructor = constructor.get();
-        Object[] objects = Stream.of(injectableConstructor.getParameters())
+        List<Object> objects = Stream.of(injectableConstructor.getParameters())
                 .map(p -> {
                     if(p.getType().equals(Provider.class)) {
                         return createProvider(((ParameterizedType)p.getParameterizedType()).getActualTypeArguments()[0]);
                     }
                     return create(p.getType());
                 })
-                .collect(Collectors.toList()).toArray();
+                .collect(Collectors.toList());
 
         try {
-            T instance = (T) injectableConstructor.newInstance(objects);
+            T instance = (T) injectableConstructor.newInstance(objects.toArray());
             populateFields(instance);
             graph.put(instance.getClass().getName(), instance);
             return instance;
@@ -122,8 +122,8 @@ public final class DefaultInjector implements Injector {
         Arrays.stream(t.getClass().getDeclaredFields())
                 .filter(field -> field.isAnnotationPresent(Inject.class))
                 .forEach(field -> {
-                    try { //TODO: Fix bad settings of fields.
-                        boolean accessible = field.isAccessible();
+                    boolean accessible = field.isAccessible();
+                    try {
                         field.setAccessible(true);
                         field.set(t, create(field.getType()));
                         field.setAccessible(accessible);
