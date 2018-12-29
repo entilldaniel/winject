@@ -1,7 +1,7 @@
 package com.whalenut.winject.inject;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 
@@ -11,7 +11,7 @@ public class DefaultInjectorTest {
 
     private Injector injector;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         injector = new DefaultInjector(ClassLoader.getSystemClassLoader());
     }

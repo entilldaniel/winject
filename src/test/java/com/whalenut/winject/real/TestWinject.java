@@ -4,10 +4,16 @@ import com.whalenut.winject.Winject;
 import com.whalenut.winject.inject.Injector;
 import com.whalenut.winject.real.torpedo.FotonTorpedo;
 import com.whalenut.winject.real.torpedo.Torpedo;
+import org.junit.jupiter.api.Test;
 
 public class TestWinject {
 
-    public TestWinject() {
+    public static void main(String[] args) {
+        new TestWinject().runInjections();
+    }
+
+    @Test
+    void runInjections() {
         Injector winject = Winject.init();
         winject.map(Torpedo.class).to(FotonTorpedo.class);
 
@@ -15,9 +21,6 @@ public class TestWinject {
         a.tell();
     }
 
-    public static void main(String[] args) {
-        new TestWinject();
-    }
 
 
 
