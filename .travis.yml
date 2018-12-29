@@ -2,3 +2,10 @@ language: java
 
 jdk:
   - openjdk11
+
+
+addons:
+  sonarcloud:
+    organization: "whalenut-github"
+    token:
+      secure: "whalenut_winject"
