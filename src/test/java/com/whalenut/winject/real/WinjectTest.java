@@ -6,10 +6,10 @@ import com.whalenut.winject.real.torpedo.FotonTorpedo;
 import com.whalenut.winject.real.torpedo.Torpedo;
 import org.junit.jupiter.api.Test;
 
-public class TestWinject {
+public class WinjectTest {
 
     public static void main(String[] args) {
-        new TestWinject().runInjections();
+        new WinjectTest().runInjections();
     }
 
     @Test

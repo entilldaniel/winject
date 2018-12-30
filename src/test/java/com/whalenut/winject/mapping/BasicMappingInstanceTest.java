@@ -9,19 +9,19 @@ class BasicMappingInstanceTest {
 
 
     @Test
-    void shouldThrowOnConcreteClass() {
+    public void shouldThrowOnConcreteClass() {
         assertThrows(IllegalArgumentException.class, () -> {
             new BasicMappingInstance<Foo, Bar>(Foo.class);
         });
     }
 
     @Test
-    void shouldAcceptInterface() {
+    public void shouldAcceptInterface() {
         new BasicMappingInstance<Baz, Foo>(Baz.class);
     }
 
     @Test
-    void shouldReturnClass() {
+    public void shouldReturnClass() {
         var bmi = new BasicMappingInstance<Baz, Foo>(Baz.class);
         Class foo = bmi.to(Foo.class).get();
 
