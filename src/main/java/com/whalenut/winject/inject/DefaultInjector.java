@@ -1,6 +1,7 @@
 package com.whalenut.winject.inject;
 
 
+import com.whalenut.winject.inject.exceptions.WinjectInstantiationException;
 import com.whalenut.winject.mapping.BasicMappingInstance;
 
 import javax.inject.Inject;
@@ -40,7 +41,6 @@ public final class DefaultInjector implements Injector {
 
     @Override
     public <T> T create(Class<T> clazz) {
-
         if(mappings.containsKey(clazz.getName())) {
             clazz = mappings.get(clazz.getName()).get();
         }
@@ -78,7 +78,8 @@ public final class DefaultInjector implements Injector {
     }
 
     private <T> T buildTree(final Optional<? extends Constructor<?>> constructor) {
-        Constructor<?> injectableConstructor = constructor.get();
+        Constructor<?> injectableConstructor = constructor.orElseThrow(
+                () -> new WinjectInstantiationException("No constructor available."));
         List<Object> objects = Stream.of(injectableConstructor.getParameters())
                 .map(p -> {
                     if(p.getType().equals(Provider.class)) {
@@ -94,9 +95,8 @@ public final class DefaultInjector implements Injector {
             graph.put(instance.getClass().getName(), instance);
             return instance;
         } catch (InstantiationException | IllegalAccessException |InvocationTargetException e) {
-            e.printStackTrace();
+            throw new WinjectInstantiationException("Could not create instance!", e);
         }
-        throw new IllegalArgumentException("Could not create instance!");
     }
 
     private <T> T checkNoArgs(final Class<T> clazz) {
@@ -112,10 +112,12 @@ public final class DefaultInjector implements Injector {
                 graph.put(instance.getClass().getName(), instance);
                 return instance;
             } catch (RuntimeException | IllegalAccessException | InstantiationException e) {
-                throw new RuntimeException(e);
+                var message = String.format("Could not create instance of %s", clazz.getName());
+                throw new WinjectInstantiationException(message, e);
             }
         }
-        throw new IllegalArgumentException("No injectable or no arguments constructor found for class " + clazz.getName());
+        var message = String.format("No injectable, or no zero-arguments constructor found for class %s", clazz.getName());
+        throw new WinjectInstantiationException(message);
     }
 
     private <T> void populateFields(T t) {
