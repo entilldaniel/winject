@@ -1,8 +1,10 @@
 package com.whalenut.winject.inject.exceptions;
 
-public class WinjectInstantiationException extends RuntimeException {
-
-    public WinjectInstantiationException() { }
+/**
+ * Exception indicating that Winject could not instantiate the requested
+ * class.
+ */
+public class WinjectInstantiationException extends WinjectException {
 
     public WinjectInstantiationException(String message) {
         super(message);

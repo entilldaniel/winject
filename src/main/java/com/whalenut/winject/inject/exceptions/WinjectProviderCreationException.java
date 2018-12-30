@@ -1,6 +1,9 @@
 package com.whalenut.winject.inject.exceptions;
 
-public class WinjectProviderCreationException extends RuntimeException {
+/**
+ * Exceptions related to creating providers.
+ */
+public class WinjectProviderCreationException extends WinjectException {
 
     public WinjectProviderCreationException(String message) {
         super(message);

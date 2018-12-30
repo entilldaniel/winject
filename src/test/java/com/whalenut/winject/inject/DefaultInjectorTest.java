@@ -19,24 +19,22 @@ public class DefaultInjectorTest {
 
     @Test
     public void testConstructorInjection() {
-        Foo test = injector.create(Foo.class);
-
-        assertNotNull(test.getX());
+        ConstructorInjected test = injector.create(ConstructorInjected.class);
+        assertNotNull(test.getBar());
     }
 
     @Test
     public void testMemberInjection() {
-        Foo2 test = injector.create(Foo2.class);
-
-        assertNotNull(test.getX());
+        FieldInjected test = injector.create(FieldInjected.class);
+        assertNotNull(test.getBar());
     }
 
     @Test
     public void testMemberAndConstructorInjection() {
-        Foo3 test = injector.create(Foo3.class);
+        FinalFieldInjection test = injector.create(FinalFieldInjection.class);
 
-        assertNotNull(test.getX());
-        assertNotNull(test.getY());
+        assertNotNull(test.getFinalBar());
+        assertNotNull(test.getFieldBar());
     }
 
     @Test
@@ -54,49 +52,49 @@ public class DefaultInjectorTest {
         assertNotNull(test);
     }
 
-    private static class Foo {
-        private final Bar x;
+    private static class ConstructorInjected {
+        private final Bar bar;
 
         @Inject
-        public Foo(final Bar x) {
-            this.x = x;
+        public ConstructorInjected(final Bar bar) {
+            this.bar = bar;
         }
 
-        public Bar getX() {
-            return x;
+        public Bar getBar() {
+            return bar;
         }
     }
 
-    private static class Foo2 {
+    private static class FieldInjected {
         @Inject
-        private Bar x;
+        private Bar bar;
 
-        public Foo2() {
+        public FieldInjected() {
         }
 
-        public Bar getX() {
-            return x;
+        public Bar getBar() {
+            return bar;
         }
     }
 
-    private static class Foo3 {
+    private static class FinalFieldInjection {
 
-        private final Bar x;
-
-        @Inject
-        private Bar y;
+        private final Bar bar;
 
         @Inject
-        public Foo3(final Bar x) {
-            this.x = x;
+        private Bar fieldBar;
+
+        @Inject
+        public FinalFieldInjection(final Bar bar) {
+            this.bar = bar;
         }
 
-        public Bar getX() {
-            return x;
+        public Bar getFinalBar() {
+            return bar;
         }
 
-        public Bar getY() {
-            return y;
+        public Bar getFieldBar() {
+            return fieldBar;
         }
     }
 

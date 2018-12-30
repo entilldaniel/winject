@@ -122,17 +122,20 @@ public final class DefaultInjector implements Injector {
         throw new WinjectInstantiationException(message);
     }
 
-    private <T> void populateFields(T t) {
-        Arrays.stream(t.getClass().getDeclaredFields())
+    private <T> void populateFields(T target) {
+        var current = this;
+        Arrays.stream(target.getClass().getDeclaredFields())
                 .filter(field -> field.isAnnotationPresent(Inject.class))
                 .forEach(field -> {
-                    boolean accessible = field.isAccessible();
+                    boolean accessible = field.canAccess(target);
                     try {
                         field.setAccessible(true);
-                        field.set(t, create(field.getType()));
+                        field.set(target, create(field.getType()));
                         field.setAccessible(accessible);
                     } catch (IllegalAccessException e) {
-                        var message = String.format("Cannot access field: %s in class: ", field.getName(), t.getClass().getCanonicalName());
+                        var message = String.format("Cannot access field: %s in class: %s",
+                                field.getName(),
+                                target.getClass().getCanonicalName());
                         throw new WinjectException(message, e);
                     }
                 });
