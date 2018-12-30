@@ -6,8 +6,7 @@ jdk:
 addons:
   sonarcloud:
     organization: whalenut-github
-    token:
-      secure: WRDY/9D+kYnLYMazpa+GGY0cmdrC+oebph6huuLDtO2ovPU0oK677qTKwXQZGwKNZLt7tj+xUHkh+qL5jvEmq8tQyoMDi/EWLfoDujqratMZGR4RHlRklS2KCbmRhIrvI8JElCqBUqJWL2pBd27fBLFD1xEVdYpcqVNzAimWDG5P17SA98t63ogShOhbF0c/KWNC7JLWT9TiB6cdqPqUWHHK0zZvbHx8ND1kqFctRXcXI0JiIWGSX1f9F762eYn3YimnL2RbqluR/CosTkzYAOk9KuL7jSKqwNsOIpfczS21Wn70GEu/ioU86TRCkCT8h/mhYD83xY143YyzAd0vBS4sJ4AhHZMewOPX7NTpQCHPYUKOtiT7fszMxCnVDaiK6/sTYnOT0ZfUeHrzt9cEv3VdTR6zPMb/FVeS8Hhy4BIg6WDRvWihkgkhwYja+QX6uW6sKE48i4LzGFlGpJGBs4E8Vp0q4EuHgj8JWcKyQPvXUy3d3bxJ9wyo5o1VXcYVR7z2EnNJlVDJs2i4UoLaqboQNJXjuAspRbz9YKx0g3BpwnAAR7aa9kdm6vRplqoBQGO/uapaz9mNhX4MwNihYwFgbg3lXJE2JXhmxnv3Cdpk23PxoImmFh6ucjmw93C3x60kHNTQ2k+bLY5VcIfUtI3LpzhtEMMb3ka0pUdZo9A=
+
 
 script:
   - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar
