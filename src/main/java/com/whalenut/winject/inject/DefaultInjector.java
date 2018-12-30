@@ -1,7 +1,9 @@
 package com.whalenut.winject.inject;
 
 
+import com.whalenut.winject.inject.exceptions.WinjectException;
 import com.whalenut.winject.inject.exceptions.WinjectInstantiationException;
+import com.whalenut.winject.inject.exceptions.WinjectProviderCreationException;
 import com.whalenut.winject.mapping.BasicMappingInstance;
 
 import javax.inject.Inject;
@@ -65,13 +67,13 @@ public final class DefaultInjector implements Injector {
             try {
                 return create(Class.forName(type.getTypeName()));
             } catch (ClassNotFoundException e) {
-                throw new RuntimeException("Could not create provider", e);
+                throw new WinjectProviderCreationException("Could not create provider", e);
             }
         };
     }
 
     private <T> Optional<? extends Constructor<?>> getInjectableConstructor(final Class<T> clazz) {
-        return Stream.of(clazz.getConstructors()).filter(ctor -> {
+        return Stream.of(clazz.getDeclaredConstructors()).filter(ctor -> {
             Optional<Inject> injectableConstructor = Optional.ofNullable(ctor.getAnnotation(Inject.class));
             return injectableConstructor.isPresent();
         }).findFirst();
@@ -130,8 +132,8 @@ public final class DefaultInjector implements Injector {
                         field.set(t, create(field.getType()));
                         field.setAccessible(accessible);
                     } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                        throw new RuntimeException("Cannot access field: " + field.getName() + " in class: " + t.getClass().getCanonicalName());
+                        var message = String.format("Cannot access field: %s in class: ", field.getName(), t.getClass().getCanonicalName());
+                        throw new WinjectException(message, e);
                     }
                 });
     }
