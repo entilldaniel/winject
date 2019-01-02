@@ -14,7 +14,7 @@ public class DefaultInjectorTest {
 
     @BeforeEach
     void setUp() {
-        injector = new DefaultInjector(ClassLoader.getSystemClassLoader());
+        injector = new DefaultInjector();
     }
 
     @Test

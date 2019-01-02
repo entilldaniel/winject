@@ -30,12 +30,9 @@ public final class DefaultInjector implements Injector {
     private final Map<String, Object> graph;
     private final Map<String, BasicMappingInstance> mappings;
 
-    private final ClassLoader loader;
-
-    public DefaultInjector(final ClassLoader loader) {
+    public DefaultInjector() {
         graph = new HashMap<>();
         mappings = new HashMap<>();
-        this.loader = loader;
     }
 
     @Override
