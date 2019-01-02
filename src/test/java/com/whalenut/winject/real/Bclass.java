@@ -10,11 +10,13 @@ public class Bclass {
     private Torpedo torpedo;
 
     private final Cclass c;
+    private final Cclass c2;
 
     @Inject
-    public Bclass(Cclass c) {
+    public Bclass(Cclass c, Cclass c2) {
         System.out.println("B constructor");
         this.c = c;
+        this.c2 = c2;
     }
 
     public void printName() {

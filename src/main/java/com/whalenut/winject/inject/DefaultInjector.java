@@ -4,6 +4,7 @@ package com.whalenut.winject.inject;
 import com.whalenut.winject.inject.exceptions.WinjectException;
 import com.whalenut.winject.inject.exceptions.WinjectInstantiationException;
 import com.whalenut.winject.inject.exceptions.WinjectProviderCreationException;
+import com.whalenut.winject.inject.exceptions.WinjectSetterException;
 import com.whalenut.winject.mapping.BasicMappingInstance;
 
 import javax.inject.Inject;
@@ -76,7 +77,10 @@ public final class DefaultInjector implements Injector {
                                 .toArray();
                         method.invoke(instance, objects);
                     } catch (IllegalAccessException | InvocationTargetException e) {
-                        e.printStackTrace();
+                        String message = String.format("Could not inject candidate for class %s in method %s",
+                                clazz.getName(),
+                                method.getName());
+                        throw new WinjectSetterException(message, e);
                     }
                 });
     }
