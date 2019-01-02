@@ -13,24 +13,24 @@ public class DefaultInjectorTest {
     private Injector injector;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         injector = new DefaultInjector(ClassLoader.getSystemClassLoader());
     }
 
     @Test
-    public void testConstructorInjection() {
+    void testConstructorInjection() {
         ConstructorInjected test = injector.create(ConstructorInjected.class);
         assertNotNull(test.getBar());
     }
 
     @Test
-    public void testMemberInjection() {
+    void testFieldInjection() {
         FieldInjected test = injector.create(FieldInjected.class);
         assertNotNull(test.getBar());
     }
 
     @Test
-    public void testMemberAndConstructorInjection() {
+    void testFieldAndConstructorInjection() {
         FinalFieldInjection test = injector.create(FinalFieldInjection.class);
 
         assertNotNull(test.getFinalBar());
@@ -38,18 +38,24 @@ public class DefaultInjectorTest {
     }
 
     @Test
-    public void testObjectConstruction() {
+    void testObjectConstruction() {
         Bar test = injector.create(Bar.class);
 
         assertNotNull(test);
     }
 
     @Test
-    public void testInterfaceToConcreteMapping() {
+    void testInterfaceToConcreteMapping() {
         injector.map(Buzz.class).to(Fizz.class);
         Buzz test = injector.create(Buzz.class);
 
         assertNotNull(test);
+    }
+
+    @Test
+    void testSetterInjection() {
+        SetterInjection test = injector.create(SetterInjection.class);
+        assertNotNull(test.getBar());
     }
 
     private static class ConstructorInjected {
@@ -95,6 +101,22 @@ public class DefaultInjectorTest {
 
         public Bar getFieldBar() {
             return fieldBar;
+        }
+    }
+
+    private static class SetterInjection {
+
+        private Bar bar;
+
+        public SetterInjection() {}
+
+        public Bar getBar() {
+            return bar;
+        }
+
+        @Inject
+        public void setBar(Bar bar) {
+            this.bar = bar;
         }
     }
 

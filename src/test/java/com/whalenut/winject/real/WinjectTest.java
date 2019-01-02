@@ -4,6 +4,8 @@ import com.whalenut.winject.Winject;
 import com.whalenut.winject.inject.Injector;
 import com.whalenut.winject.real.torpedo.FotonTorpedo;
 import com.whalenut.winject.real.torpedo.Torpedo;
+import org.atinject.tck.Tck;
+import org.atinject.tck.auto.Car;
 import org.junit.jupiter.api.Test;
 
 public class WinjectTest {

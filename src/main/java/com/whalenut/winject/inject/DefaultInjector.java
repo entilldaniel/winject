@@ -9,8 +9,11 @@ import com.whalenut.winject.mapping.BasicMappingInstance;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -43,23 +46,46 @@ public final class DefaultInjector implements Injector {
 
     @Override
     public <T> T create(Class<T> clazz) {
-        if(mappings.containsKey(clazz.getName())) {
+        if (mappings.containsKey(clazz.getName())) {
             clazz = mappings.get(clazz.getName()).get();
         }
 
-        if(clazz.isAnnotationPresent(Singleton.class) && graph.containsKey(clazz.getName())) {
+        if (clazz.isAnnotationPresent(Singleton.class) && graph.containsKey(clazz.getName())) {
             return (T) graph.get(clazz.getName());
         }
 
         T instance;
         Optional<? extends Constructor<?>> constructor = getInjectableConstructor(clazz);
-        if(!constructor.isPresent()) {
+        if (!constructor.isPresent()) {
             instance = checkNoArgs(clazz);
         } else {
             instance = buildTree(constructor);
         }
+        handleInjectableSetters(instance, clazz);
 
         return instance;
+    }
+
+    private <T> void handleInjectableSetters(final T instance, final Class<T> clazz) {
+        Arrays.stream(instance.getClass().getDeclaredMethods())
+                .filter(this::filterInjectables)
+                .forEach(method -> {
+                    try {
+                        Object[] objects = Arrays.asList(method.getParameterTypes()).stream()
+                                .map(this::create)
+                                .toArray();
+                        method.invoke(instance, objects);
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+                });
+    }
+
+    private boolean filterInjectables(Method method) {
+        return Arrays.asList(method.getDeclaredAnnotations())
+                .stream()
+                .map(Annotation::annotationType)
+                .collect(Collectors.toList()).contains(Inject.class);
     }
 
     private Provider<?> createProvider(Type type) {
@@ -73,6 +99,12 @@ public final class DefaultInjector implements Injector {
     }
 
     private <T> Optional<? extends Constructor<?>> getInjectableConstructor(final Class<T> clazz) {
+        //If the it is an interface find a suitable implementation.
+        if (clazz.isInterface()) {
+//            loader.classes.stream().filter(c -> c.getInterfaces().length > 0).filter(c -> c.isInterface() == false).forEach(c -> System.out.println(c.getInterfaces()[0]));
+//            System.out.println(clazz.getName());
+        }
+
         return Stream.of(clazz.getDeclaredConstructors()).filter(ctor -> {
             Optional<Inject> injectableConstructor = Optional.ofNullable(ctor.getAnnotation(Inject.class));
             return injectableConstructor.isPresent();
@@ -84,8 +116,8 @@ public final class DefaultInjector implements Injector {
                 () -> new WinjectInstantiationException("No constructor available."));
         List<Object> objects = Stream.of(injectableConstructor.getParameters())
                 .map(p -> {
-                    if(p.getType().equals(Provider.class)) {
-                        return createProvider(((ParameterizedType)p.getParameterizedType()).getActualTypeArguments()[0]);
+                    if (p.getType().equals(Provider.class)) {
+                        return createProvider(((ParameterizedType) p.getParameterizedType()).getActualTypeArguments()[0]);
                     }
                     return create(p.getType());
                 })
@@ -96,8 +128,9 @@ public final class DefaultInjector implements Injector {
             populateFields(instance);
             graph.put(instance.getClass().getName(), instance);
             return instance;
-        } catch (InstantiationException | IllegalAccessException |InvocationTargetException e) {
-            throw new WinjectInstantiationException("Could not create instance!", e);
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            var message = String.format("Could not create instance of %s", constructor.getClass().getName());
+            throw new WinjectInstantiationException(message, e);
         }
     }
 
@@ -107,13 +140,13 @@ public final class DefaultInjector implements Injector {
                 .filter(constructor -> constructor.getParameterCount() == 0)
                 .findFirst();
 
-        if(noArgsConstructor.isPresent()) {
+        if (noArgsConstructor.isPresent()) {
             try {
-                T instance = clazz.newInstance();
+                T instance = clazz.getDeclaredConstructor().newInstance();
                 populateFields(instance);
                 graph.put(instance.getClass().getName(), instance);
                 return instance;
-            } catch (RuntimeException | IllegalAccessException | InstantiationException e) {
+            } catch (RuntimeException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
                 var message = String.format("Could not create instance of %s", clazz.getName());
                 throw new WinjectInstantiationException(message, e);
             }
@@ -123,22 +156,23 @@ public final class DefaultInjector implements Injector {
     }
 
     private <T> void populateFields(T target) {
-        var current = this;
         Arrays.stream(target.getClass().getDeclaredFields())
                 .filter(field -> field.isAnnotationPresent(Inject.class))
-                .forEach(field -> {
-                    boolean accessible = field.canAccess(target);
-                    try {
-                        field.setAccessible(true);
-                        field.set(target, create(field.getType()));
-                        field.setAccessible(accessible);
-                    } catch (IllegalAccessException e) {
-                        var message = String.format("Cannot access field: %s in class: %s",
-                                field.getName(),
-                                target.getClass().getCanonicalName());
-                        throw new WinjectException(message, e);
-                    }
-                });
+                .forEach(field -> populateField(field, target));
+    }
+
+    private <T> void populateField(Field field, T target) {
+        boolean accessible = field.canAccess(target);
+        try {
+            field.setAccessible(true);
+            field.set(target, create(field.getType()));
+            field.setAccessible(accessible);
+        } catch (IllegalAccessException e) {
+            var message = String.format("Cannot access field: %s in class: %s",
+                    field.getName(),
+                    target.getClass().getCanonicalName());
+            throw new WinjectException(message, e);
+        }
     }
 
 }
